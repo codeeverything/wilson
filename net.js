@@ -163,7 +163,7 @@ var learningRate = 0.5;
  * Helper function to log the state of the network at a given point
  */
 function log(id) {
-    // return;
+    return;
     console.log('STATE AT ' + id);
     console.log('inputs', JSON.stringify(inputs.data(), null, 4));
     console.log('input > hidden weights', JSON.stringify(inputWeights.data(), null, 4));
@@ -178,12 +178,9 @@ function forward(inputs) {
     // input > hidden
     // multiply the input weights by the inputs
     hidden = inputWeights.multiply(inputs);
-    //console.log(hidden.data());
     
     // apply the activation function
     hidden = hidden.transform(sigmoid);
-    //console.log(hidden.data());
-    //console.log(hiddenWeights.multiply(hidden).data());
     
     // hidden > output
     // multiply the hidden weights by the hidden values and sum the resulting matrix (array)
@@ -207,15 +204,13 @@ function backward(inputs, guess) {
     
     var delta = sigmoidPrime(guess.sum) * error;
     delta = parseFloat(delta.toFixed(3));
-    //console.log(delta);
     
     // hidden to output weights
     var hiddenBefore = hiddenWeights;
     var deltaWeights = hidden.transform(function (val) {
         return ((delta / val) * learningRate);
     });
-    //console.log(deltaWeights.data());
-    //console.log('old and new hidden to output weights', hiddenBefore.data(), hiddenWeights.add(deltaWeights));
+    
     hiddenWeights = new Matrix(hiddenWeights.add(deltaWeights));
     
     // input to hidden weights
@@ -223,25 +218,16 @@ function backward(inputs, guess) {
        return parseFloat((delta / val).toFixed(3)); 
     });
     
-    //console.log(deltaHiddenSum.data());
-    
     var sum = inputWeights.multiply(inputs);
-    //console.log(sum.data());
     sum = sum.transform(sigmoidPrime);
-    //console.log(sum.data());
     deltaHiddenSum = deltaHiddenSum.multiply(sum);
     deltaHiddenSum = deltaHiddenSum.transform(function (val) {
        return parseFloat((val * learningRate).toFixed(3)); 
     });
-    
-    //console.log(deltaHiddenSum.data());
  
     var deltaWeights = deltaHiddenSum.multiply(inputs.transpose());
-    //console.log(deltaWeights.data());
     var oldInputWeights = inputWeights;
     inputWeights = new Matrix(inputWeights.add(deltaWeights));
-    //console.log('old and new input to hidden weights', oldInputWeights.data());
-    //console.log(inputWeights.data());
 }
 
 /**
@@ -250,7 +236,7 @@ function backward(inputs, guess) {
 function learn() {
     var guesses = [];
     log('inital');
-    for (var i=0; i < 200; i++) {
+    for (var i=0; i < 5000; i++) {
         console.log('iteration', i+1);
         var guess = forward(inputs);
         guesses.push(guess);
