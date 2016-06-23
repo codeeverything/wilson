@@ -53,6 +53,19 @@ var Matrix = function (dataArray) {
             
             return new Matrix(result);
         },
+        dot: function(m2) {
+            var result = [];
+            
+            for (var i = 0; i < data.length; i++) {
+                result[i] = [];
+                
+                for (var j = 0; j < data[i].length; j++) {
+                    result[i][j] = data[i][j] * m2.data()[i][j];
+                }
+            }
+            
+            return result;
+        },
         transform: function (callback) {
             return new Matrix(data.map(function (row) {
                 return row.map(callback);
