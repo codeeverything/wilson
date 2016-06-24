@@ -1,39 +1,25 @@
-/**
- * Wilson - A simple JS neural network library
- * 
- * Supports:
- * Training data with labels
- * Multiple hidden layers
- * Hidden layer size definition
- * Multiple outputs
- * Import/export of weights
- * Learning
- * Prediction
- * Hyperparameter config
- * Browser and NodeJS environments
- * 
- */
+// train OR
+var wilson = require('./wilson.js')();
 
-// var Matrix = require('./matrix.js');
-var linearAlgebra = require('linear-algebra')(),     // initialise it 
-Vector = linearAlgebra.Vector,
-Matrix = linearAlgebra.Matrix;
+wilson.learn([
+    [1,1],
+    [0,0],
+    [0,1],
+    [1,0]
+], [
+    [1],
+    [0],
+    [1],
+    [1]
+]);
 
-Matrix.prototype.populate = function (x, y) {
-    function sample() {
-        return Math.sqrt(-2 * Math.log(Math.random())) * Math.cos(2 * Math.PI * Math.random());
-    }
-    
-    var res = [];
-    for (var i=0; i < x; i++) {
-        res[i] = [];
-        for (var j=0; j < y; j++) {
-            res[i][j] = Math.random() - 1;
-        }
-    }
-    
-    return new Matrix(res);
-}
+// test
+wilson.predict([[1,1]], 1);
+wilson.predict([[0,1]], 1);
+wilson.predict([[1,0]], 1);
+wilson.predict([[0,0]], 0);
+
+die();
 
 /**
  * Sigmoid "squashing" function
@@ -194,21 +180,21 @@ function predict(input, expected) {
 }
 
 
-// train hours and score
-learn(new Matrix([
-    [3,5],
-    [5,1],
-    [10,2],
-]), new Matrix([
-    [0.75],
-    [0.82],
-    [0.93],
-]));
+// // train hours and score
+// learn(new Matrix([
+//     [3,5],
+//     [5,1],
+//     [10,2],
+// ]), new Matrix([
+//     [0.75],
+//     [0.82],
+//     [0.93],
+// ]));
 
-// test
-predict(new Matrix([[3,5]]), 75);
-predict(new Matrix([[5,1]]), 82);
-predict(new Matrix([[10,2]]), 93);
+// // test
+// predict(new Matrix([[3,5]]), 75);
+// predict(new Matrix([[5,1]]), 82);
+// predict(new Matrix([[10,2]]), 93);
 
 // train OR
 learn(new Matrix([
@@ -228,23 +214,6 @@ predict(new Matrix([[1,1]]), 1);
 predict(new Matrix([[0,1]]), 1);
 predict(new Matrix([[1,0]]), 1);
 predict(new Matrix([[0,0]]), 0);
-
-// train OR
-learn(new Matrix([
-    [1.1,1.1],
-    [0,0],
-    [0,1.1]
-]), new Matrix([
-    [0.5],
-    [0.1],
-    [0.3]
-]));
-
-// test
-predict(new Matrix([[1.1,1.1]]), 0.5);
-predict(new Matrix([[0,1.1]]), 0.3);
-predict(new Matrix([[0,0]]), 0.1);
-predict(new Matrix([[1,0]]), 0.1);
 
 // train IRIS
 learn(new Matrix([
@@ -570,95 +539,3 @@ console.log(decToFlower(p));
 // unknown
 p = predict(new Matrix([[5.9,3,5.1,1.8]]), 0.5);
 console.log(decToFlower(p));
-
-/**
- * Letters.
- *
- * - Imagine these # and . represent black and white pixels.
- */
-
-var a = character(
-  '.#####.' +
-  '#.....#' +
-  '#.....#' +
-  '#######' +
-  '#.....#' +
-  '#.....#' +
-  '#.....#'
-);
-
-var b = character(
-  '######.' +
-  '#.....#' +
-  '#.....#' +
-  '######.' +
-  '#.....#' +
-  '#.....#' +
-  '######.'
-);
-
-var c = character(
-  '#######' +
-  '#......' +
-  '#......' +
-  '#......' +
-  '#......' +
-  '#......' +
-  '#######'
-);
-
-/**
- * Learn the letters A through C.
- */
-
-learningRate = 10;
-learn(new Matrix([
-    a,b,c    
-]), new Matrix([
-    map('a'),
-    map('b'),
-    map('c'),
-]));
-
-/**
- * Predict the letter C, even with a pixel off.
- */
-
-predict(new Matrix([
-    character(
-        '.######' +
-        '#......' +
-        '#......' +
-        '#......' +
-        '#......' +
-        '##.....' +
-        '.......'
-    )
-]), 0.5);
-
-/**
- * Turn the # into 1s and . into 0s.
- */
-
-function character(string) {
-  return string
-    .trim()
-    .split('')
-    .map(integer);
-
-  function integer(symbol) {
-    if ('#' === symbol) return 1;
-    if ('.' === symbol) return 0;
-  }
-}
-
-/**
- * Map letter to a number.
- */
-
-function map(letter) {
-  if (letter === 'a') return [ 0.1 ];
-  if (letter === 'b') return [ 0.3 ];
-  if (letter === 'c') return [ 0.5 ];
-  return 0;
-}
