@@ -17,7 +17,7 @@ var Matrix = function (dataArray) {
                 }
             }
             
-            return res;
+            return new Matrix([res]);
         },
         subtract: function (m2) {
             m2 = m2.data();
@@ -29,7 +29,7 @@ var Matrix = function (dataArray) {
                 }
             }
             
-            return res;
+            return new Matrix([res]);
         },
         multiply: function (m2) {
             var result = [];
@@ -64,7 +64,7 @@ var Matrix = function (dataArray) {
                 }
             }
             
-            return result;
+            return new Matrix([result])
         },
         transform: function (callback) {
             return new Matrix(data.map(function (row) {

@@ -14,9 +14,26 @@
  * 
  */
 
-var Matrix = require('./matrix.js');
+// var Matrix = require('./matrix.js');
+var linearAlgebra = require('linear-algebra')(),     // initialise it 
+Vector = linearAlgebra.Vector,
+Matrix = linearAlgebra.Matrix;
 
-
+Matrix.prototype.populate = function (x, y) {
+    function sample() {
+        return Math.sqrt(-2 * Math.log(Math.random())) * Math.cos(2 * Math.PI * Math.random());
+    }
+    
+    var res = [];
+    for (var i=0; i < x; i++) {
+        res[i] = [];
+        for (var j=0; j < y; j++) {
+            res[i][j] = sample();
+        }
+    }
+    
+    return new Matrix(res);
+}
 
 /**
  * Sigmoid "squashing" function
@@ -38,34 +55,14 @@ function sigmoidPrime(t) {
  * hopefully global minimum we're looking for. 
  * Values from 0 - 1
  */
-var learningRate = 0.7;
+var learningRate = 1;
 
 /**
  * Number of iterations to train over
  */
-var iterations = 5000;
+var iterations = 100;
 
 var hiddenUnits = 3;
-
-/**
- * Inputs - training data or real data
- */
-// var inputs = new Matrix([
-//     [1,1],
-//     [0,0],
-//     [0,1],
-//     [1,0]
-// ]);
-
-/**
- * Expected output(s)
- */
-// var target = new Matrix([
-//     [0],
-//     [0],
-//     [1],
-//     [1]
-// ]);
 
 /**
  * Hidden layer (just one for now), values
@@ -102,80 +99,89 @@ function log(id) {
 function forward(inputs) {
     // input > hidden
     // multiply the input weights by the inputs
-    hidden = inputWeights.multiply(inputs);
+    hidden = inputs.dot(inputWeights);
     
     // apply the activation function
     // hidden = hidden.transform(sigmoid);  // don't do this here as we need to reference "hidden" in back prop
     
     // hidden > output
     // multiply the hidden weights by the hidden values and sum the resulting matrix (array)
-    var sum = hiddenWeights.multiply(hidden.transform(sigmoid));
+    var sum = hidden.sigmoid().dot(hiddenWeights);
     
     // > output
-    // return the sum and the result of sum passed through the activation function
-    return {
-        sum: sum, 
-        val: sum.transform(sigmoid)
-    };
+    return sum;
 }
 
 /**
  * Backward propogation
  */
 function backward(inputs, guess, target) {
-    // error rate
-    var error = target.subtract(guess.val);
+    var error = target.minus(guess).map(function (val) {
+        return val * -1;
+    }); // -(y-yHat)
     
-    // output > hidden weights
-    var delta = guess.sum.transform(sigmoidPrime).dot(new Matrix(error));
-    delta = new Matrix(delta);
-    var deltaWeights = delta.multiply(hidden.transpose().transform(sigmoid)).transform(function (val) {
+    // delta3 = delta for output to hidden weights
+    var delta3 = error.mul(guess.map(sigmoidPrime)); //.mul(error);   //np.multiply(-(y-self.yHat), self.sigmoidPrime(self.z3))
+    var dJdW2 = hidden.sigmoid().trans().dot(delta3).map(function (val) {
         return val * learningRate;
-    });
+    }); //np.dot(self.a2.T, delta3)
+    console.log('delta3', delta3);
+    console.log('dJdW2', dJdW2);
+    console.log('hidden weights before', hiddenWeights);
+    var hiddenWeightsBefore = hiddenWeights.clone();
+    hiddenWeights = hiddenWeights.minus(dJdW2);
+    console.log('hidden weights after', hiddenWeights);
     
-    var hiddenBefore = hiddenWeights;
-    hiddenWeights = new Matrix(hiddenWeights.add(deltaWeights));
-    
-    // hidden > input weights
-    delta = hiddenWeights.transpose().multiply(delta).dot(hidden.transform(sigmoidPrime));
-    delta = new Matrix(delta);
-    deltaWeights = delta.multiply(inputs.transpose()).transform(function (val) {
+    // delta2 = delta for hidden to input
+    console.log('delta2 ex', delta3.dot(hiddenWeightsBefore.trans()));
+    var delta2 = delta3.dot(hiddenWeightsBefore.trans()).dot(hidden.map(sigmoidPrime));   //np.dot(delta3, self.W2.T)*self.sigmoidPrime(self.z2)
+    var dJdW1 = inputs.trans().dot(delta2).map(function (val) {
         return val * learningRate;
-    });
-    
-    var oldInputWeights = inputWeights;
-    inputWeights = new Matrix(inputWeights.add(deltaWeights));
-    
-    return error;
+    }); //np.dot(X.T, delta2);
+    console.log('dJdW1', dJdW1);
+    console.log('input weights before', inputWeights);
+    inputWeights = inputWeights.minus(dJdW1);
+    console.log('input weights after', inputWeights);
+     
+    return error.toArray();
 }
 
 /**
  * Train the network on the input(s) and expected output(s)
  */
 function learn(inputs, target) {
-    inputs = inputs;
-    target = target;
+    // inputs = inputs;
+    // target = target;
     
-    inputWeights.populate(inputs.data()[0].length, hiddenUnits);
-    hiddenWeights.populate(hiddenUnits, target.data()[0].length);
-    // inputs = inputs.transform(sigmoid);
-    // target = target.transform(sigmoid);
+    inputWeights = inputWeights.populate(inputs.toArray()[0].length, hiddenUnits);
+    hiddenWeights = hiddenWeights.populate(hiddenUnits, target.toArray()[0].length);
     
     var guesses = [];
+    var errors = [];
     // log('inital');
     console.log('learning...');
     for (var i=0; i < iterations; i++) {
         // console.log('iteration', i+1);
         var guess = forward(inputs);
-        guesses.push(guess.val.data());
+        guesses.push(guess.toArray());
         // log('forward');
         var error = backward(inputs, guess, target);
+        var mse = 0;
+        for (var e in error) {
+            mse += Math.pow(error[e], 2);
+        }
+        errors.push(mse);
+        if (mse <= 0.005) {
+            console.log(errors);
+            console.log('error threshold reached at iteration', i);
+            return;
+        }
         // log('backward');
     }
     
     log('end');
     // console.log('guesses', guesses);
-    console.log(error);
+    console.log(errors);
 }
 
 /**
@@ -184,9 +190,24 @@ function learn(inputs, target) {
 function predict(input, expected) {
     var prediction = forward(input);
     // console.log(prediction.sum.data());
-    console.log('predicted', prediction.val.data()[0][0].toFixed(3), 'expected', expected);
-    return prediction.val.data()[0][0].toFixed(3);
+    console.log('predicted', prediction.toArray()[0][0].toFixed(3), 'expected', expected);
+    return prediction.toArray()[0][0].toFixed(3);
 }
+// train hours and score
+learn(new Matrix([
+    [3,5],
+    [5,1],
+    [10,2],
+]), new Matrix([
+    [0.75],
+    [0.82],
+    [0.93],
+]));
+
+// test
+predict(new Matrix([[3,5]]), 75);
+predict(new Matrix([[5,1]]), 82);
+predict(new Matrix([[10,2]]), 93);
 
 // // train XOR
 // learn(new Matrix([
@@ -206,207 +227,3 @@ function predict(input, expected) {
 // predict(new Matrix([[0,1]]), 1);
 // predict(new Matrix([[1,0]]), 1);
 // predict(new Matrix([[0,0]]), 0);
-
-// // train OR
-// learn(new Matrix([
-//     [1,1],
-//     [0,0],
-//     [0,1],
-//     [1,0]
-// ]), new Matrix([
-//     [1],
-//     [0],
-//     [1],
-//     [1]
-// ]));
-
-// // test
-// predict(new Matrix([[1,1]]), 1);
-// predict(new Matrix([[0,1]]), 1);
-// predict(new Matrix([[1,0]]), 1);
-// predict(new Matrix([[0,0]]), 0);
-
-// // train AND
-// learn(new Matrix([
-//     [1,1],
-//     [0,0],
-//     [0,1],
-//     [1,0]
-// ]), new Matrix([
-//     [1],
-//     [0],
-//     [0],
-//     [0]
-// ]));
-
-// // test
-// predict(new Matrix([[1,1]]), 1);
-// predict(new Matrix([[0,1]]), 0);
-// predict(new Matrix([[1,0]]), 0);
-// predict(new Matrix([[0,0]]), 0);
-
-// train RGB
-learn(new Matrix([
-    [0],
-    // [20],
-    // [30],
-    // [40],
-    // [50],
-    // [60],
-    // [65],
-    // [70],
-    // [80],
-    // [85],
-    // [100],
-    // [200],
-    // [300],
-    // [400],
-    // [500],
-    // [600],
-    // [700],
-    // [800],
-    // [900],
-    [1],
-    // [0,1,0],
-    // [0,0,1],
-]), new Matrix([
-    [0.1],
-    // [0.1],
-    // [0.1],
-    // [0.1],
-    // [0.1],
-    // [0.1],
-    // [0.1],
-    // [0.1],
-    // [0.1],
-    // [0.1],
-    // [0.5],
-    // [0.5],
-    // [0.5],
-    // [0.5],
-    // [0.5],
-    // [0.5],
-    // [0.5],
-    // [0.5],
-    // [0.5],
-    [0.5],
-    // [0.5]
-]));
-
-// test
-predict(new Matrix([[0]]), '0.1 - small');
-predict(new Matrix([[1]]), '0.5 - large');
-predict(new Matrix([[44]]), '0.1 - small');
-predict(new Matrix([[1000]]), '0.5 - large');
-
-
-// /**
-//  * Letters.
-//  *
-//  * - Imagine these # and . represent black and white pixels.
-//  */
-
-// var a = character(
-//   '.#####.' +
-//   '#.....#' +
-//   '#.....#' +
-//   '#######' +
-//   '#.....#' +
-//   '#.....#' +
-//   '#.....#'
-// );
-
-// var b = character(
-//   '######.' +
-//   '#.....#' +
-//   '#.....#' +
-//   '######.' +
-//   '#.....#' +
-//   '#.....#' +
-//   '######.'
-// );
-
-// var c = character(
-//   '#######' +
-//   '#......' +
-//   '#......' +
-//   '#......' +
-//   '#......' +
-//   '#......' +
-//   '#######'
-// );
-
-// /**
-//  * Learn the letters A through C.
-//  */
-
-// learn(new Matrix([
-//     a,
-//     b,
-//     c
-// ]), new Matrix([
-//     map('a'),
-//     map('b'),
-//     map('c')
-// ]));
-
-// /**
-//  * Predict the letter C, even with a pixel off.
-//  */
-// var p = predict(new Matrix([
-//     character(
-//       '######.' +
-//       '#.....#' +
-//       '#.....#' +
-//       '######.' +
-//       '#.....#' +
-//       '#.....#' +
-//       '######.'
-//     )
-// ]), map('b'));
-
-// var targets = [
-//     0.1,
-//     0.3,
-//     0.5
-// ];
-
-// var rmap = ['a', 'b', 'c'];
-// var bestError = 99999;
-// var candidate;
-// for (var i=0; i<targets.length; i++) {
-//     var err = Math.sqrt((targets[i] - p) * (targets[i] - p));
-//     if (err < bestError) {
-//         bestError = err;
-//         candidate = rmap[i];
-//     }
-// }
-
-// console.log('best candidate match', candidate, 'with error of', bestError.toFixed(3), 'from expected');
-
-// /**
-//  * Turn the # into 1s and . into 0s.
-//  */
-
-// function character(string) {
-//   return string
-//     .trim()
-//     .split('')
-//     .map(integer);
-
-//   function integer(symbol) {
-//     if ('#' === symbol) return 1;
-//     if ('.' === symbol) return 0;
-//   }
-// }
-
-// /**
-//  * Map letter to a number.
-//  */
-
-// function map(letter) {
-//   if (letter === 'a') return [ 0.1 ];
-//   if (letter === 'b') return [ 0.3 ];
-//   if (letter === 'c') return [ 0.5 ];
-//   return 0;
-// }
