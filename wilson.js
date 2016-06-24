@@ -1,5 +1,6 @@
 /**
  * Wilson - A simple JS neural network
+ * IBM Watson's very distant cousin
  * 
  * Supports:
  * Training data with labels
@@ -25,10 +26,20 @@
 
 /**
  * Dependencies
+ * 
+ * Linear Algebra - for Matrix manipulation: https://www.npmjs.com/package/linear-algebra
  */
 var linearAlgebra = require('linear-algebra')(),    // initialise it 
 Matrix = linearAlgebra.Matrix;
 
+/**
+ * Populates a Matrix of dimensions (x, y) with random values from the Guassian distribution 
+ * 
+ * @see https://github.com/stevenmiller888/sample 
+ * @param int x - Number of columns
+ * @param int y - Number of rows
+ * @return Matrix
+ */
 Matrix.prototype.populate = function (x, y) {
     function sample() {
         return Math.sqrt(-2 * Math.log(Math.random())) * Math.cos(2 * Math.PI * Math.random());
@@ -46,7 +57,7 @@ Matrix.prototype.populate = function (x, y) {
 }
 
 /**
- * Wilson
+ * Wilson "class"
  */
 
 // export Wilson
@@ -106,14 +117,15 @@ function Wilson(opts) {
      * Helper function to log the state of the network at a given point
      */
     function log(id) {
-        return;
         console.log('STATE AT ' + id);
-        console.log('inputs', JSON.stringify(inputs.data(), null, 4));
         console.log('input > hidden weights', JSON.stringify(inputWeights.data(), null, 4));
         console.log('hidden values', JSON.stringify(hidden.data(), null, 4));
         console.log('hidden > output weights', JSON.stringify(hiddenWeights.data(), null, 4));
     }
     
+    /**
+     * Appy configuration options to the network
+     */
     function config() {
         hiddenNodes = opts.hiddenNodes || 3;    // number of hidden neurons
         iterations = opts.iterations || 10000;  // number of iterations
@@ -122,6 +134,11 @@ function Wilson(opts) {
     
     /**
      * Forward propogation
+     * Computes the network node values given the current set of weights.
+     * Returns the resulting output(s)
+     * 
+     * @param Matrix inputs - The input data
+     * @return Matrix
      */
     function forward(inputs) {
         // input > hidden
@@ -138,8 +155,12 @@ function Wilson(opts) {
     
     /**
      * Backward propogation
-     * 
      * Uses Stochastic Gradient Descent to optimise
+     * 
+     * @param Matrix inputs - The training data
+     * @param Matrix guess - The result of the forward propagation step
+     * @param Matrix target - The target output(s)
+     * @return Matrix
      */
     function backward(inputs, guess, target) {
         // output layer error
@@ -167,7 +188,14 @@ function Wilson(opts) {
     
     // expose methods and properties
     return {
-        learn: function (inputs, target) {
+        /**
+         * Given some inputs and target output(s), learn
+         * 
+         * @param array inputs - The input/training data
+         * @param array target - The target output value(s)
+         * @return void
+         */
+        learn: function (inputs, target, report) {
             // first configure the network
             config();
             
@@ -191,11 +219,21 @@ function Wilson(opts) {
                         }) / error.trans().toArray()[0].length);
                     })(error);
                     
-                    console.log('Error after ', i, 'iterations', err);
+                    if (report) {
+                        console.log('Error after ', i, 'iterations', err);
+                    }
                 }
             }
         },
+        /**
+         * Given an input value(s) predict the ouput(s)
+         * 
+         * @param array input - The input
+         * @param float expected - The expected output
+         * @return float
+         */
         predict: function (input, expected) {
+            // TODO: Support multiple inputs and outputs
             // first configure the network
             config();
             
@@ -204,12 +242,23 @@ function Wilson(opts) {
             console.log('predicted', prediction.toArray()[0][0].toFixed(2), 'expected', expected);
             return prediction.toArray()[0][0].toFixed(2);
         },
+        /**
+         * Configure property(s) of the network after initialisation
+         * 
+         * @param object conf - JSON object holding config data
+         * @return void
+         */
         configure: function (conf) {
             // update any current config with values passed
             for (var op in conf) {
                 opts[op] = conf[op];
             }
         },
+        /**
+         * Save the network config and state
+         * 
+         * @return string
+         */
         save: function () {
             // return a JSON string of the weights/parameters
             return JSON.stringify({
@@ -224,6 +273,12 @@ function Wilson(opts) {
                 ]
             });
         },
+        /**
+         * Configure the network with a previously saved instance
+         * 
+         * @param string config - A JSON string representing the network state
+         * @return void
+         */
         load: function (config) {
             // load the given network config (weights and hyper-parameters)
             config = JSON.parse(config);
