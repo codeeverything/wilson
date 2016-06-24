@@ -1,5 +1,5 @@
 /**
- * Wilson - A simple JS neural network library
+ * Wilson - A simple JS neural network
  * 
  * Supports:
  * Training data with labels
@@ -20,6 +20,7 @@
  * http://iamtrask.github.io/2015/07/12/basic-python-network/
  * http://iamtrask.github.io/2015/07/27/python-network-part2/
  * 
+ * @author Mike Timms <mike@codeeverything.com>
  */
 
 /**
@@ -56,9 +57,12 @@ function Wilson(opts) {
     opts = opts || {};
     
     // hyper-paramters
-    var hiddenNodes = opts.hiddenNodes || 3;    // number of hidden neurons
-    var iterations = opts.iterations || 10000;  // number of iterations
-    var learningRate = opts.learningRate || 0.1;
+    var hiddenNodes;    // number of hidden neurons
+    var iterations;  // number of iterations
+    var learningRate;
+    
+    // confgigure the network
+    config();
     
     // weights and values
     
@@ -110,6 +114,12 @@ function Wilson(opts) {
         console.log('hidden > output weights', JSON.stringify(hiddenWeights.data(), null, 4));
     }
     
+    function config() {
+        hiddenNodes = opts.hiddenNodes || 3;    // number of hidden neurons
+        iterations = opts.iterations || 10000;  // number of iterations
+        learningRate = opts.learningRate || 0.1;
+    }
+    
     /**
      * Forward propogation
      */
@@ -128,26 +138,28 @@ function Wilson(opts) {
     
     /**
      * Backward propogation
+     * 
+     * Uses Stochastic Gradient Descent to optimise
      */
     function backward(inputs, guess, target) {
         // output layer error
-        var error = guess.minus(target);    //layer_2_error = layer_2 - y
+        var error = guess.minus(target);
         
-        var outputDelta = error.mul(guess.map(sigmoidOutputToDerivitive)); //layer_2_delta = layer_2_error*sigmoid_output_to_derivative(layer_2)
+        var outputDelta = error.mul(guess.map(sigmoidOutputToDerivitive));
         
         // hidden layer error
-        var hiddenLayerError = outputDelta.dot(hiddenWeights.trans());    //layer_1_error = layer_2_delta.dot(synapse_1.T)
-        var hiddenLayerDelta = hiddenLayerError.mul(hidden.map(sigmoidOutputToDerivitive));    //layer_1_delta = layer_1_error * sigmoid_output_to_derivative(layer_1)
+        var hiddenLayerError = outputDelta.dot(hiddenWeights.trans());
+        var hiddenLayerDelta = hiddenLayerError.mul(hidden.map(sigmoidOutputToDerivitive));
         
         // adjust hidden > output weights
         hiddenWeights = hiddenWeights.minus(hidden.trans().dot(outputDelta).map(function (val) {
             return val * learningRate;
-        }));   //synapse_1 -= alpha * (layer_1.T.dot(layer_2_delta))
+        }));
         
         // adjust input > hidden weights
         inputWeights = inputWeights.minus(inputs.trans().dot(hiddenLayerDelta).map(function (val) {
             return val * learningRate;
-        }));    //synapse_0 -= alpha * (layer_0.T.dot(layer_1_delta))
+        }));
         
         // return the error
         return error
@@ -156,6 +168,9 @@ function Wilson(opts) {
     // expose methods and properties
     return {
         learn: function (inputs, target) {
+            // first configure the network
+            config();
+            
             // learn the outputs from the inputs
             inputs = new Matrix(inputs);
             target = new Matrix(target);
@@ -181,19 +196,50 @@ function Wilson(opts) {
             }
         },
         predict: function (input, expected) {
+            // first configure the network
+            config();
+            
             // predict the output from the input
             var prediction = forward(new Matrix(input));
             console.log('predicted', prediction.toArray()[0][0].toFixed(2), 'expected', expected);
             return prediction.toArray()[0][0].toFixed(2);
         },
-        configure: function (opts) {
+        configure: function (conf) {
             // update any current config with values passed
+            for (var op in conf) {
+                opts[op] = conf[op];
+            }
         },
         save: function () {
             // return a JSON string of the weights/parameters
+            return JSON.stringify({
+                hyperParams: {
+                    hiddenNodes: opts.hiddenNodes,
+                    // iterations: opts.iterations,
+                    // learningRate: opts.learningRate
+                },
+                weights: [
+                    inputWeights.toArray(),
+                    hiddenWeights.toArray()
+                ]
+            });
         },
         load: function (config) {
             // load the given network config (weights and hyper-parameters)
+            config = JSON.parse(config);
+            
+            // setup
+            opts = {
+                hiddenNodes: config.hyperParams.hiddenNodes,
+                iterations: config.hyperParams.iterations,
+                learningRate: config.hyperParams.learningRate
+            };
+            
+            // load up the values
+            config();
+            
+            inputWeights = config.weights[0];
+            hiddenWeights = config.weights[1];
         }
     }
 }
