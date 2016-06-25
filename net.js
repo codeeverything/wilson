@@ -1,7 +1,29 @@
+
 // train OR
 var wilson = require('./wilson.js')();
 
 // learn OR
+wilson.learn([
+    [1,1,1],
+    [0,1,1],
+    [0,0,1],
+], [
+    [1,0,0],
+    [0,1,0],
+    [0,0,1],
+], true);
+
+// test
+wilson.predict([[1,1,1]], '1,0,0');
+wilson.predict([[0,1,1]], '0,1,0');
+wilson.predict([[0,0,1]], '0,0,1');
+// new
+wilson.predict([[1.1,1.1,1.1]], '1,0,0');
+wilson.predict([[0,0.5,0.5]], '0,1,1');
+// wilson.predict([[0,1]], 1);
+// wilson.predict([[1,0]], 1);
+// wilson.predict([[0,0]], 0);
+
 wilson.learn([
     [1,1],
     [0,0],
@@ -19,6 +41,8 @@ wilson.predict([[1,1]], 1);
 wilson.predict([[0,1]], 1);
 wilson.predict([[1,0]], 1);
 wilson.predict([[0,0]], 0);
+
+die();
 
 // train IRIS
 wilson.learn([
@@ -323,29 +347,14 @@ wilson.learn([
     "Iris-virginica",
     "Iris-virginica",
     // "Iris-virginica"    // we'll test with this one
-].map(flowerToDec));
-
-function flowerToDec(flower) {
-    if (flower == "Iris-setosa") return [0.1];
-    if (flower == "Iris-versicolor") return [0.3];
-    if (flower == "Iris-virginica") return [0.5];
-    return 0;
-}
-
-function decToFlower(dec) {
-    if (dec == 0.1) return "Iris-setosa";
-    if (dec == 0.3) return "Iris-versicolor";
-    if (dec == 0.5) return "Iris-virginica";
-    return "unsure";
-}
+]);
 
 // trained 
 var p = wilson.predict([
     [5.1,3.5,1.4,0.2]
 ], 0.1);
-console.log(decToFlower(p));
+
 // unknown
 p = wilson.predict([
     [5.9,3,5.1,1.8]
-], 0.5);
-console.log(decToFlower(p));
+], 'Iris-virginica');

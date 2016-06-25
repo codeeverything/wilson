@@ -3,15 +3,25 @@
  * IBM Watson's very distant cousin
  * 
  * Supports:
- * Training data with labels
+ * Training data with labels - PARTIAL, needs fixing for repeated labels
  * Multiple hidden layers
- * Hidden layer size definition
- * Multiple outputs
- * Import/export of weights
- * Learning
- * Prediction
- * Hyperparameter config
+ * Hidden layer size definition - DONE
+ * Multiple outputs - DONE
+ * Import/export of weights - DONE
+ * Learning - DONE
+ * Prediction - DONE
+ * Hyperparameter config - DONE 
  * Browser and NodeJS environments
+ * HTAN/custom activation function - HTAN DONE
+ * 
+ * TODO:
+ * Softmax for probability of each output
+ * Selection of most likely output(s) 
+ * Biases?
+ * Drop out?
+ * Activation function per layer?
+ * Annealing of learning rate
+ * Tests
  * 
  * Inspired and heavily influenced by:
  * https://github.com/stevenmiller888/mind
@@ -20,6 +30,7 @@
  * https://github.com/harthur/brain/blob/master/lib/neuralnetwork.js
  * http://iamtrask.github.io/2015/07/12/basic-python-network/
  * http://iamtrask.github.io/2015/07/27/python-network-part2/
+ * http://www.wildml.com/2015/09/implementing-a-neural-network-from-scratch/
  * 
  * @author Mike Timms <mike@codeeverything.com>
  */
@@ -72,6 +83,10 @@ function Wilson(opts) {
     var iterations;  // number of iterations
     var learningRate;
     
+    // TOOD - Predefined or user defined. If user defined cannot save()?
+    // var activation;
+    // var activationPrime;
+    
     // confgigure the network
     config();
     
@@ -92,26 +107,66 @@ function Wilson(opts) {
      */
     var hiddenWeights = new Matrix([]);
     
+    var labels = [];
+    
     /**
-     * Sigmoid "squashing" function
+     * Sigmoid activation function
+     * Returns a value between 0 and 1
+     * 
+     * @param number val - The value to apply the function to
+     * @return number
      */
-    function sigmoid(t){
-       return 1 / (1 + Math.exp(-t));
+    function sigmoid(val){
+       return 1 / (1 + Math.exp(-val));
     }
     
     /**
-     * Derivitive of Sigmoid function
+     * Sigmoid value to derivitive
+     * 
+     * @see: http://math.stackexchange.com/questions/78575/derivative-of-sigmoid-function-sigma-x-frac11e-x
+     * @param number val - The value to apply the function to
+     * @return number
      */
-    function sigmoidPrime(t) {
-    	return (Math.exp(-t) / Math.pow(1 + Math.exp(-t), 2));
+    function sigmoidPrime(val) {
+        return val * (1-val);
     }
     
     /**
-     * Sigmoid to derivitive
+     * Hyperbolic tan activation function
+     * Returns a value between -1 and 1
+     * 
+     * @param number val - The value to apply the function to
+     * @return number
      */
-    function sigmoidOutputToDerivitive(a) {
-        return a * (1-a);
+    function tanh(val) {
+        return Math.tanh(val);
     }
+    
+    /**
+     * Hyperbolic tan value to derivative
+     * 
+     * @see: http://math2.org/math/derivatives/more/hyperbolics.htm
+     * @param number val - The value to apply the function to
+     * @return number
+     */
+    function tanhPrime(val) {
+        return val * (1 - val);
+    }
+    
+    /**
+     * Activation functions
+     * @TODO
+     */
+    var a = {
+        sigmoid: [
+            function () {
+                // 
+            },
+            function () {
+                // derivitive/prime
+            }
+        ]
+    };
     
     /**
      * Helper function to log the state of the network at a given point
@@ -121,6 +176,21 @@ function Wilson(opts) {
         console.log('input > hidden weights', JSON.stringify(inputWeights.data(), null, 4));
         console.log('hidden values', JSON.stringify(hidden.data(), null, 4));
         console.log('hidden > output weights', JSON.stringify(hiddenWeights.data(), null, 4));
+    }
+    
+    /**
+     * Map predicted results to output classes/labels
+     * 
+     * @param Matrix prediction - The ouput of the predict() function
+     * @return mixed
+     */
+    function getLabel(prediction) {
+        // get array and read first (and only) entry
+        prediction = prediction.toArray()[0];
+        // find the index from this array with the max value. see: http://stackoverflow.com/questions/11301438/return-index-of-greatest-value-in-an-array
+        var bestIdx = prediction.indexOf(Math.max.apply(Math, prediction));
+        // return the corrosponding output/class label
+        return labels[bestIdx];
     }
     
     /**
@@ -166,11 +236,11 @@ function Wilson(opts) {
         // output layer error
         var error = guess.minus(target);
         
-        var outputDelta = error.mul(guess.map(sigmoidOutputToDerivitive));
+        var outputDelta = error.mul(guess.map(sigmoidPrime));
         
         // hidden layer error
         var hiddenLayerError = outputDelta.dot(hiddenWeights.trans());
-        var hiddenLayerDelta = hiddenLayerError.mul(hidden.map(sigmoidOutputToDerivitive));
+        var hiddenLayerDelta = hiddenLayerError.mul(hidden.map(sigmoidPrime));
         
         // adjust hidden > output weights
         hiddenWeights = hiddenWeights.minus(hidden.trans().dot(outputDelta).map(function (val) {
@@ -200,8 +270,17 @@ function Wilson(opts) {
             config();
             
             // learn the outputs from the inputs
+            
+            // build the target/output layer based on the labels/classes given as targets
+            var outputLayer = Matrix.zero(target.length, inputs.length).toArray();
+            for (var idx in target) {
+                outputLayer[idx][idx] = 1;
+                labels[idx] = target[idx];
+            }
+            
+            // set as matrix
             inputs = new Matrix(inputs);
-            target = new Matrix(target);
+            target = new Matrix(outputLayer);
             
             // initialize weights
             inputWeights = inputWeights.populate(inputs.toArray()[0].length, hiddenNodes);
@@ -237,10 +316,22 @@ function Wilson(opts) {
             // first configure the network
             config();
             
+            function softmax(p) {
+                var exp = p.map(function (val) {
+                    return Math.exp(val);
+                });
+                
+                // np.exp(z) / np.sum(np.exp(z))
+                var sum = exp.getSum();
+                return exp.map(function (val) {
+                    return val / sum;
+                });
+            }
+            
             // predict the output from the input
             var prediction = forward(new Matrix(input));
-            console.log('predicted', prediction.toArray()[0][0].toFixed(2), 'expected', expected);
-            return prediction.toArray()[0][0].toFixed(2);
+            console.log('predicted', softmax(prediction).toArray(), getLabel(prediction), 'expected', expected);
+            return prediction.toArray();
         },
         /**
          * Configure property(s) of the network after initialisation
