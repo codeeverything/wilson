@@ -3,8 +3,7 @@
  * IBM Watson's very distant cousin
  * 
  * Supports:
- * Training data with labels - PARTIAL, needs fixing for repeated labels
- * Multiple hidden layers - Restructure: layers[], weights[] vs specific vars?
+ * Training data with labels - PARTIAL, correctly produces outputLayer and labels, but fails to learn the Isis dataset (smaller sets work?)
  * Hidden layer size definition - DONE
  * Multiple outputs - DONE
  * Import/export of weights - DONE
@@ -15,6 +14,7 @@
  * HTAN/custom activation function - DONE
  * 
  * TODO:
+ * Multiple hidden layers - Restructure: layers[], weights[] vs specific vars?
  * Softmax for probability of each output
  * Selection of most likely output(s) 
  * Biases?
@@ -111,6 +111,19 @@ function Wilson(opts) {
      */
     var hiddenWeights = new Matrix([]);
     
+    /**
+     * Values
+     */
+    var nodes = new Matrix([]);
+    
+    /**
+     * Weights
+     */
+    var synapses = new Matrix([]);
+    
+    /**
+     * Labels for output data
+     */
     var labels = [];
     
     /**
@@ -268,10 +281,38 @@ function Wilson(opts) {
             
             // build the target/output layer based on the labels/classes given as targets
             var outputLayer = Matrix.zero(target.length, inputs.length).toArray();
-            for (var idx in target) {
-                outputLayer[idx][idx] = 1;
-                labels[idx] = target[idx];
+            // get unique outputs
+            function onlyUnique(value, index, self) { 
+                return self.indexOf(value) === index;
             }
+            
+            // get the unique outputs
+            var uniq = target.filter(onlyUnique);
+            console.log('unique', uniq);
+            
+            // map these to a binary representation
+            // for example: ['red', 'green', 'blue'] => [[1,0,0], [0,1,0], [0,0,1]] or
+            // ['red', 'green', 'red', blue'] => [[1,0,0], [0,1,0], [1,0,0], [0,0,1]]
+            var outputMap = {};
+            for (var idx in uniq) {
+                if (!outputMap[uniq[idx]]) {
+                    outputMap[uniq[idx]] = {
+                        data: Matrix.zero(1, uniq.length).toArray()
+                    }
+                }
+                outputMap[uniq[idx]].data[0][idx] = 1;
+                labels[idx] = uniq[idx];
+            }
+            
+            // set the output layer to have the correct binary representation for each entry
+            for (var idx in target) {
+                outputLayer[idx] = outputMap[target[idx]].data[0];
+            }
+            
+            console.log(JSON.stringify(outputMap));
+            console.log('outputLayer', outputLayer);
+            console.log(labels);
+            // die();
             
             // set as matrix
             inputs = new Matrix(inputs);
@@ -326,7 +367,7 @@ function Wilson(opts) {
             
             // predict the output from the input
             var prediction = forward(new Matrix(input));
-            console.log('predicted', softmax(prediction).toArray(), getLabel(prediction), 'expected', expected);
+            console.log('predicted', (prediction).toArray(), getLabel(prediction), 'expected', expected);
             return prediction.toArray();
         },
         /**
