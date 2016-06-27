@@ -4,7 +4,7 @@
  * 
  * Supports:
  * Training data with labels - PARTIAL, needs fixing for repeated labels
- * Multiple hidden layers
+ * Multiple hidden layers - Restructure: layers[], weights[] vs specific vars?
  * Hidden layer size definition - DONE
  * Multiple outputs - DONE
  * Import/export of weights - DONE
@@ -22,6 +22,8 @@
  * Activation function per layer?
  * Annealing of learning rate
  * Tests
+ * Back prop algorithm: SGD, BFGS, Mini-Batch GD...?
+ * Learn best network topology?
  * 
  * Inspired and heavily influenced by:
  * https://github.com/stevenmiller888/mind
@@ -31,6 +33,8 @@
  * http://iamtrask.github.io/2015/07/12/basic-python-network/
  * http://iamtrask.github.io/2015/07/27/python-network-part2/
  * http://www.wildml.com/2015/09/implementing-a-neural-network-from-scratch/
+ * https://www.mathsisfun.com/calculus/derivatives-introduction.html
+ * http://sebastianruder.com/optimizing-gradient-descent/
  * 
  * @author Mike Timms <mike@codeeverything.com>
  */
@@ -316,6 +320,7 @@ function Wilson(opts) {
             // first configure the network
             config();
             
+            // https://en.wikipedia.org/wiki/Softmax_function
             function softmax(p) {
                 var exp = p.map(function (val) {
                     return Math.exp(val);
