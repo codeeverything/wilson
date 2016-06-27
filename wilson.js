@@ -12,7 +12,7 @@
  * Prediction - DONE
  * Hyperparameter config - DONE 
  * Browser and NodeJS environments
- * HTAN/custom activation function - HTAN DONE
+ * HTAN/custom activation function - DONE
  * 
  * TODO:
  * Softmax for probability of each output
@@ -88,8 +88,8 @@ function Wilson(opts) {
     var learningRate;
     
     // TOOD - Predefined or user defined. If user defined cannot save()?
-    // var activation;
-    // var activationPrime;
+    var activation;
+    var activationPrime;
     
     // confgigure the network
     config();
@@ -158,21 +158,6 @@ function Wilson(opts) {
     }
     
     /**
-     * Activation functions
-     * @TODO
-     */
-    var a = {
-        sigmoid: [
-            function () {
-                // 
-            },
-            function () {
-                // derivitive/prime
-            }
-        ]
-    };
-    
-    /**
      * Helper function to log the state of the network at a given point
      */
     function log(id) {
@@ -204,6 +189,8 @@ function Wilson(opts) {
         hiddenNodes = opts.hiddenNodes || 3;    // number of hidden neurons
         iterations = opts.iterations || 10000;  // number of iterations
         learningRate = opts.learningRate || 0.1;
+        activation = opts.activation || (typeof opts.activation === 'string' ? opts.activation == 'sigmoid' ? sigmoid : opts.activation == 'tanh' ? tanh : sigmoid : sigmoid);    // activation function
+        activationPrime = opts.activationPrime || (typeof opts.activation === 'string' ? opts.activation == 'sigmoidPrime' ? sigmoidPrime : opts.activation == 'tanhPrime' ? tanhPrime : sigmoidPrime : sigmoidPrime); // derivitive of activation function
     }
     
     /**
@@ -217,11 +204,15 @@ function Wilson(opts) {
     function forward(inputs) {
         // input > hidden
         // multiply the input weights by the inputs
-        hidden = inputs.dot(inputWeights).sigmoid();
+        hidden = inputs.dot(inputWeights).map(function (val) {
+            return activation(val);
+        });
         
         // hidden > output
         // multiply the hidden weights by the hidden values and sum the resulting matrix (array)
-        var sum = hidden.dot(hiddenWeights).sigmoid();
+        var sum = hidden.dot(hiddenWeights).map(function (val) {
+            return activation(val);
+        });
         
         // > output
         return sum;
@@ -240,11 +231,11 @@ function Wilson(opts) {
         // output layer error
         var error = guess.minus(target);
         
-        var outputDelta = error.mul(guess.map(sigmoidPrime));
+        var outputDelta = error.mul(guess.map(activationPrime));
         
         // hidden layer error
         var hiddenLayerError = outputDelta.dot(hiddenWeights.trans());
-        var hiddenLayerDelta = hiddenLayerError.mul(hidden.map(sigmoidPrime));
+        var hiddenLayerDelta = hiddenLayerError.mul(hidden.map(activationPrime));
         
         // adjust hidden > output weights
         hiddenWeights = hiddenWeights.minus(hidden.trans().dot(outputDelta).map(function (val) {
