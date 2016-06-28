@@ -13,7 +13,7 @@
  * Browser and NodeJS environments
  * HTAN/custom activation function - DONE
  * 
- * TODO:
+ * Future work:
  * Multiple hidden layers - Restructure: layers[], weights[] vs specific vars?
  * Softmax for probability of each output
  * Selection of most likely output(s) 
