@@ -90,7 +90,7 @@ wilson.predict([[0,0.5,0.5]], 'green');
 // wilson.predict([[1,0]], 1);
 // wilson.predict([[0,0]], 0);
 
-die();
+// die();
 
 wilson.learn([
     [1,1],
@@ -98,11 +98,11 @@ wilson.learn([
     [0,1],
     [1,0]
 ], [
-    [1],
-    [0],
-    [1],
-    [1]
-]);
+    1,
+    0,
+    1,
+    1
+], true);
 
 // test
 wilson.predict([[1,1]], 1);
@@ -113,6 +113,28 @@ wilson.predict([[0,0]], 0);
 // die();
 
 // train IRIS
+wilson.learn([
+    [1,1,1,1],
+    [3,3,3,3],
+    [5,5,5,5],
+], [
+    "Iris-A",
+    "Iris-B",
+    "Iris-C",
+], true);
+
+// trained 
+var p = wilson.predict([
+    [1,1,1,1]
+], 0.1);
+
+// die();
+// train IRIS
+wilson.configure({
+    learningRate: 0.1,
+    hiddenNodes: 3
+});
+
 wilson.learn([
     [5.1,3.5,1.4,0.2],
     [4.9,3,1.4,0.2],
@@ -415,7 +437,7 @@ wilson.learn([
     "Iris-virginica",
     "Iris-virginica",
     // "Iris-virginica"    // we'll test with this one
-]);
+], true);
 
 // trained 
 var p = wilson.predict([
@@ -423,6 +445,6 @@ var p = wilson.predict([
 ], 0.1);
 
 // unknown
-p = wilson.predict([
-    [5.9,3,5.1,1.8]
-], 'Iris-virginica');
+// p = wilson.predict([
+//     [5.9,3,5.1,1.8]
+// ], 'Iris-virginica');

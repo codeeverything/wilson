@@ -170,6 +170,15 @@ function Wilson(opts) {
         return val * (1 - val);
     }
     
+    // https://en.wikipedia.org/wiki/Softmax_function
+    function softmax(p) {
+        var values = p.toArray();
+        var exponents = values.map(Math.exp),
+        total = exponents.reduce((a, b) => a + b, 0);
+        
+        return new Matrix(exponents.map((exp) => exp / total));
+    }
+    
     /**
      * Helper function to log the state of the network at a given point
      */
@@ -288,7 +297,6 @@ function Wilson(opts) {
             
             // get the unique outputs
             var uniq = target.filter(onlyUnique);
-            console.log('unique', uniq);
             
             // map these to a binary representation
             // for example: ['red', 'green', 'blue'] => [[1,0,0], [0,1,0], [0,0,1]] or
@@ -300,6 +308,7 @@ function Wilson(opts) {
                         data: Matrix.zero(1, uniq.length).toArray()
                     }
                 }
+                
                 outputMap[uniq[idx]].data[0][idx] = 1;
                 labels[idx] = uniq[idx];
             }
@@ -308,11 +317,6 @@ function Wilson(opts) {
             for (var idx in target) {
                 outputLayer[idx] = outputMap[target[idx]].data[0];
             }
-            
-            console.log(JSON.stringify(outputMap));
-            console.log('outputLayer', outputLayer);
-            console.log(labels);
-            // die();
             
             // set as matrix
             inputs = new Matrix(inputs);
@@ -330,7 +334,7 @@ function Wilson(opts) {
                 if (i % 1000 == 0) {
                     var err = (function(err) {
                         return Math.abs(error.trans().toArray()[0].reduce(function (a, b) {
-                            return a + b;
+                            return a^2 + b^2;
                         }) / error.trans().toArray()[0].length);
                     })(error);
                     
@@ -352,23 +356,13 @@ function Wilson(opts) {
             // first configure the network
             config();
             
-            // https://en.wikipedia.org/wiki/Softmax_function
-            function softmax(p) {
-                var exp = p.map(function (val) {
-                    return Math.exp(val);
-                });
-                
-                // np.exp(z) / np.sum(np.exp(z))
-                var sum = exp.getSum();
-                return exp.map(function (val) {
-                    return val / sum;
-                });
-            }
-            
             // predict the output from the input
             var prediction = forward(new Matrix(input));
             console.log('predicted', (prediction).toArray(), getLabel(prediction), 'expected', expected);
-            return prediction.toArray();
+            return {
+                scores: prediction.toArray(),
+                bestLabel: getLabel(prediction)
+            };
         },
         /**
          * Configure property(s) of the network after initialisation
