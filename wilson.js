@@ -232,13 +232,9 @@ function Wilson(opts) {
         
         // hidden > output
         // multiply the hidden weights by the hidden values and sum the resulting matrix (array)
-        // var sum = hidden.dot(hiddenWeights).map(function (val) {
-        //     return activation(val);
-        // });
-        
-        var sum = hidden.dot(hiddenWeights);
-        
-        sum = softmax(sum);
+        var sum = hidden.dot(hiddenWeights).map(function (val) {
+            return activation(val);
+        });
         
         // > output
         return sum;
