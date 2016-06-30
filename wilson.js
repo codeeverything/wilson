@@ -42,6 +42,7 @@
  * https://visualstudiomagazine.com/articles/2014/01/01/how-to-standardize-data-for-neural-networks.aspx
  * http://stats.stackexchange.com/questions/47590/what-are-good-initial-weights-in-a-neural-network
  * https://www.willamette.edu/~gorr/classes/cs449/momrate.html
+ * https://www.youtube.com/watch?v=v8be6yPsl2s
  * 
  * @author Mike Timms <mike@codeeverything.com>
  */
@@ -370,7 +371,8 @@ function Wilson(opts) {
                         var sum = error.getSum();
                         
                         // return the mean (total / number of values)
-                        return sum / error.toArray().length;
+                        // return sum / error.toArray().length;
+                        return sum;
                     })(error);
                     
                     if (report) {
