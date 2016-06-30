@@ -18,9 +18,10 @@
  * Normalise inputs
  * Encode "raw" input to numeric values/representations
  * Multiple hidden layers - Restructure: layers[], weights[] vs specific vars?
- * Selection of most likely output(s) 
+ * Selection of most likely output(s) - i.e. predict will return the K outputs with the highest values (which may be probabilities)
  * Biases?
  * Drop out?
+ * Momentum?
  * Activation function selection per layer?
  * Annealing of learning rate
  * Tests
@@ -39,6 +40,7 @@
  * http://sebastianruder.com/optimizing-gradient-descent/
  * https://www.youtube.com/watch?v=-zT1Zi_ukSk&list=WL&index=49
  * https://visualstudiomagazine.com/articles/2014/01/01/how-to-standardize-data-for-neural-networks.aspx
+ * http://stats.stackexchange.com/questions/47590/what-are-good-initial-weights-in-a-neural-network
  * 
  * @author Mike Timms <mike@codeeverything.com>
  */
@@ -60,15 +62,25 @@ Matrix = linearAlgebra.Matrix;
  * @return Matrix
  */
 Matrix.prototype.populate = function (x, y) {
+    /**
+     * @see: http://stats.stackexchange.com/questions/47590/what-are-good-initial-weights-in-a-neural-network
+     * 
+     * According to Hugo Larochelle, Glorot & Bengio (2010), initialize the weights uniformly within the interval [−b,b][−b,b], where
+     * b = sqrt(6 /  (Hk + Hk+1)
+     * where, Hk and Hk+1 are the sizes of the layers before and after the weight matrix.
+     */
     function sample() {
-        return Math.sqrt(-2 * Math.log(Math.random())) * Math.cos(2 * Math.PI * Math.random());
+        // return Math.sqrt(-2 * Math.log(Math.random())) * Math.cos(2 * Math.PI * Math.random());
+        //return Math.random() * 0.4 - 0.2;
+        return (Math.floor(Math.random() * 201) - 100) / 100;   // -1 to 1
+        // return Math.floor((Math.random() * ((b * 200) + 1)) - (b * 100)) / 100;  // don't hardcode to -1 to 1 as above
     }
     
     var res = [];
     for (var i=0; i < x; i++) {
         res[i] = [];
         for (var j=0; j < y; j++) {
-            res[i][j] = Math.random() - 1;
+            res[i][j] = sample();
         }
     }
     

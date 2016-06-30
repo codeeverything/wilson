@@ -4,7 +4,7 @@ var wilson = require('./wilson.js')();
 
 // learn OR truth table
 wilson.configure({
-    learningRate: 0.1,
+    learningRate: 0.5,
     hiddenNodes: 3
 });
 
