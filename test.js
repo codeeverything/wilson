@@ -131,7 +131,7 @@ var p = wilson.predict([
 // die();
 // train IRIS
 wilson.configure({
-    learningRate: 0.1,
+    learningRate: 0.01,
     hiddenNodes: 3
 });
 
@@ -445,6 +445,6 @@ var p = wilson.predict([
 ], 0.1);
 
 // unknown
-// p = wilson.predict([
-//     [5.9,3,5.1,1.8]
-// ], 'Iris-virginica');
+p = wilson.predict([
+    [6.2,3.4,5.4,2.3]
+], 'Iris-virginica');
