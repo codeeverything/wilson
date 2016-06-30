@@ -3,23 +3,30 @@
 var wilson = require('./wilson.js')();
 
 // learn OR truth table
+wilson.configure({
+    learningRate: 0.7,
+    hiddenNodes: 3
+});
+
 wilson.learn([
-    [1,1],
     [0,0],
     [0,1],
-    [1,0]
+    [1,0],
+    [1,1]
 ], [
-    1,
-    0,
-    1,
-    1
-]);
+    'off',
+    'on',
+    'on',
+    'off'
+], true);
 
 // test
-wilson.predict([[1,1]], 1);
+wilson.predict([[0,0]], 0);
 wilson.predict([[0,1]], 1);
 wilson.predict([[1,0]], 1);
-wilson.predict([[0,0]], 0);
+wilson.predict([[1,1]], 0);
+
+die();
 
 // learn RGB
 wilson.learn([
@@ -107,49 +114,7 @@ wilson.predict([[0,0,1]], 'blue');
 wilson.predict([[1.1,1.1,1.1]], 'red');
 wilson.predict([[0,0.5,0.5]], 'green');
 
-// wilson.predict([[0,1]], 1);
-// wilson.predict([[1,0]], 1);
-// wilson.predict([[0,0]], 0);
 
-// die();
-
-wilson.learn([
-    [1,1],
-    [0,0],
-    [0,1],
-    [1,0]
-], [
-    1,
-    0,
-    1,
-    1
-], true);
-
-// test
-wilson.predict([[1,1]], 1);
-wilson.predict([[0,1]], 1);
-wilson.predict([[1,0]], 1);
-wilson.predict([[0,0]], 0);
-
-// die();
-
-// train IRIS
-wilson.learn([
-    [1,1,1,1],
-    [3,3,3,3],
-    [5,5,5,5],
-], [
-    "Iris-A",
-    "Iris-B",
-    "Iris-C",
-], true);
-
-// trained 
-var p = wilson.predict([
-    [1,1,1,1]
-], 0.1);
-
-// die();
 // train IRIS
 wilson.configure({
     learningRate: 0.01,
@@ -305,7 +270,7 @@ wilson.learn([
     [6.7,3,5.2,2.3],
     [6.3,2.5,5,1.9],
     [6.5,3,5.2,2],
-    [6.2,3.4,5.4,2.3],
+    // [6.2,3.4,5.4,2.3],
     // [5.9,3,5.1,1.8  ]    // we'll test with this one
 ], [
     "Iris-setosa",
@@ -456,7 +421,7 @@ wilson.learn([
     "Iris-virginica",
     "Iris-virginica",
     "Iris-virginica",
-    "Iris-virginica",
+    // "Iris-virginica",
     // "Iris-virginica"    // we'll test with this one
 ], true);
 
@@ -464,6 +429,11 @@ wilson.learn([
 var p = wilson.predict([
     [5.1,3.5,1.4,0.2]
 ], 0.1);
+
+// unknown
+p = wilson.predict([
+    [6.2,3.4,5.4,2.3]
+], 'Iris-virginica');
 
 // unknown
 p = wilson.predict([

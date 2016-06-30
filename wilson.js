@@ -14,6 +14,8 @@
  * HTAN/custom activation function - DONE
  * 
  * Future work:
+ * Normalise inputs
+ * Encode "raw" input to numeric values/representations
  * Multiple hidden layers - Restructure: layers[], weights[] vs specific vars?
  * Softmax for probability of each output
  * Selection of most likely output(s) 
@@ -35,6 +37,8 @@
  * http://www.wildml.com/2015/09/implementing-a-neural-network-from-scratch/
  * https://www.mathsisfun.com/calculus/derivatives-introduction.html
  * http://sebastianruder.com/optimizing-gradient-descent/
+ * https://www.youtube.com/watch?v=-zT1Zi_ukSk&list=WL&index=49
+ * https://visualstudiomagazine.com/articles/2014/01/01/how-to-standardize-data-for-neural-networks.aspx
  * 
  * @author Mike Timms <mike@codeeverything.com>
  */
@@ -110,16 +114,6 @@ function Wilson(opts) {
      * Weights between hidden layer (1) > output(s)
      */
     var hiddenWeights = new Matrix([]);
-    
-    /**
-     * Values
-     */
-    var nodes = new Matrix([]);
-    
-    /**
-     * Weights
-     */
-    var synapses = new Matrix([]);
     
     /**
      * Labels for output data
@@ -236,6 +230,8 @@ function Wilson(opts) {
             return activation(val);
         });
         
+        console.log(sum);
+        
         // > output
         return sum;
     }
@@ -252,6 +248,8 @@ function Wilson(opts) {
     function backward(inputs, guess, target) {
         // output layer error
         var error = guess.minus(target);
+        console.log(error);
+        die();
         
         var outputDelta = error.mul(guess.map(activationPrime));
         
@@ -358,7 +356,7 @@ function Wilson(opts) {
             
             // predict the output from the input
             var prediction = forward(new Matrix(input));
-            console.log('predicted', softmax(prediction).toArray(), getLabel(prediction), 'expected', expected);
+            console.log('predicted', (prediction).toArray(), getLabel(prediction), 'expected', expected);
             return {
                 scores: prediction.toArray(),
                 bestLabel: getLabel(prediction)
@@ -386,8 +384,8 @@ function Wilson(opts) {
             return JSON.stringify({
                 hyperParams: {
                     hiddenNodes: opts.hiddenNodes,
-                    // iterations: opts.iterations,
-                    // learningRate: opts.learningRate
+                    iterations: opts.iterations,
+                    learningRate: opts.learningRate
                 },
                 weights: [
                     inputWeights.toArray(),
