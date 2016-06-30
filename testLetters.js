@@ -2,6 +2,10 @@
 // get wilson
 var wilson = require('./wilson.js')();
 
+wilson.configure({
+    iterations: 40000
+})
+
 /**
  * Letters.
  *

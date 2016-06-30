@@ -371,12 +371,16 @@ function Wilson(opts) {
                         var sum = error.getSum();
                         
                         // return the mean (total / number of values)
-                        // return sum / error.toArray().length;
-                        return sum;
+                        return sum / error.toArray().length;
                     })(error);
                     
                     if (report) {
                         console.log('Error after ', i, 'iterations', err);
+                    }
+                    
+                    if (err < 0.05) {
+                        console.log('Minimum error reached after', i, 'iterations');
+                        break;
                     }
                 }
             }

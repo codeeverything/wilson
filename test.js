@@ -114,7 +114,8 @@ wilson.predict([[0,0.5,0.5]], 'green');
 // train IRIS
 wilson.configure({
     learningRate: 0.05,
-    hiddenNodes: 3
+    hiddenNodes: 3,
+    iterations: 20000
 });
 
 wilson.learn([
@@ -424,7 +425,7 @@ wilson.learn([
 // trained 
 var p = wilson.predict([
     [5.1,3.5,1.4,0.2]
-], 0.1);
+], 'Iris-setosa');
 
 // unknown
 p = wilson.predict([
