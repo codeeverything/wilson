@@ -41,6 +41,7 @@
  * https://www.youtube.com/watch?v=-zT1Zi_ukSk&list=WL&index=49
  * https://visualstudiomagazine.com/articles/2014/01/01/how-to-standardize-data-for-neural-networks.aspx
  * http://stats.stackexchange.com/questions/47590/what-are-good-initial-weights-in-a-neural-network
+ * https://www.willamette.edu/~gorr/classes/cs449/momrate.html
  * 
  * @author Mike Timms <mike@codeeverything.com>
  */
@@ -360,9 +361,16 @@ function Wilson(opts) {
                 // output error margin every 1000 iterations
                 if (i % 1000 == 0) {
                     var err = (function(err) {
-                        return Math.abs(error.trans().toArray()[0].reduce(function (a, b) {
-                            return a^2 + b^2;
-                        }) / error.trans().toArray()[0].length);
+                        // square the values
+                        error = error.map(function (val) {
+                            return val * val;
+                        });
+                        
+                        // get the sum of the values
+                        var sum = error.getSum();
+                        
+                        // return the mean (total / number of values)
+                        return sum / error.toArray().length;
                     })(error);
                     
                     if (report) {

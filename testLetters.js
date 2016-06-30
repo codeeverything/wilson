@@ -50,7 +50,7 @@ wilson.learn([
     'a',
     'b',
     'c'
-]);
+], true);
 
 /**
  * Predict the letter C, even with a pixel off.
