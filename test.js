@@ -4,7 +4,7 @@ var wilson = require('./wilson.js')();
 
 // learn OR truth table
 wilson.configure({
-    learningRate: 0.7,
+    learningRate: 0.1,
     hiddenNodes: 3
 });
 
@@ -26,7 +26,7 @@ wilson.predict([[0,1]], 1);
 wilson.predict([[1,0]], 1);
 wilson.predict([[1,1]], 0);
 
-die();
+// die();
 
 // learn RGB
 wilson.learn([

@@ -12,16 +12,16 @@
  * Hyperparameter config - DONE 
  * Browser and NodeJS environments
  * HTAN/custom activation function - DONE
+ * Softmax for probability of each output - DONE
  * 
  * Future work:
  * Normalise inputs
  * Encode "raw" input to numeric values/representations
  * Multiple hidden layers - Restructure: layers[], weights[] vs specific vars?
- * Softmax for probability of each output
  * Selection of most likely output(s) 
  * Biases?
  * Drop out?
- * Activation function per layer?
+ * Activation function selection per layer?
  * Annealing of learning rate
  * Tests
  * Back prop algorithm: SGD, BFGS, Mini-Batch GD...?
@@ -166,11 +166,17 @@ function Wilson(opts) {
     
     // https://en.wikipedia.org/wiki/Softmax_function
     function softmax(p) {
-        var values = p.toArray()[0];
-        var exponents = values.map(Math.exp),
-        total = exponents.reduce((a, b) => a + b, 0);
+        var foo = p.toArray();
+        var res = [];
+        for (var i in foo) {
+            var values = foo[i];
+            var exponents = values.map(Math.exp),
+            total = exponents.reduce((a, b) => a + b, 0);
+            res.push(exponents.map((exp) => exp / total));
+        }
         
-        return new Matrix(exponents.map((exp) => exp / total));
+        //return new Matrix(exponents.map((exp) => exp / total));
+        return new Matrix(res);
     }
     
     /**
@@ -226,11 +232,8 @@ function Wilson(opts) {
         
         // hidden > output
         // multiply the hidden weights by the hidden values and sum the resulting matrix (array)
-        var sum = hidden.dot(hiddenWeights).map(function (val) {
-            return activation(val);
-        });
         
-        console.log(sum);
+        var sum = softmax(hidden.dot(hiddenWeights));
         
         // > output
         return sum;
@@ -248,8 +251,6 @@ function Wilson(opts) {
     function backward(inputs, guess, target) {
         // output layer error
         var error = guess.minus(target);
-        console.log(error);
-        die();
         
         var outputDelta = error.mul(guess.map(activationPrime));
         
