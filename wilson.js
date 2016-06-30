@@ -172,7 +172,7 @@ function Wilson(opts) {
     
     // https://en.wikipedia.org/wiki/Softmax_function
     function softmax(p) {
-        var values = p.toArray();
+        var values = p.toArray()[0];
         var exponents = values.map(Math.exp),
         total = exponents.reduce((a, b) => a + b, 0);
         
@@ -358,7 +358,7 @@ function Wilson(opts) {
             
             // predict the output from the input
             var prediction = forward(new Matrix(input));
-            console.log('predicted', (prediction).toArray(), getLabel(prediction), 'expected', expected);
+            console.log('predicted', softmax(prediction).toArray(), getLabel(prediction), 'expected', expected);
             return {
                 scores: prediction.toArray(),
                 bestLabel: getLabel(prediction)
