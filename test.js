@@ -2,11 +2,7 @@
 // get wilson
 var wilson = require('./wilson.js')();
 
-// learn OR truth table
-wilson.configure({
-    learningRate: 0.5,
-    hiddenNodes: 3
-});
+// learn XOR truth table
 
 wilson.learn([
     [0,0],
@@ -117,7 +113,7 @@ wilson.predict([[0,0.5,0.5]], 'green');
 
 // train IRIS
 wilson.configure({
-    learningRate: 0.01,
+    learningRate: 0.05,
     hiddenNodes: 3
 });
 

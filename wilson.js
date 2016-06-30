@@ -176,18 +176,34 @@ function Wilson(opts) {
         return val * (1 - val);
     }
     
-    // https://en.wikipedia.org/wiki/Softmax_function
-    function softmax(p) {
-        var foo = p.toArray();
+    /**
+     * Applies the Softmax function to all values in the given matrix
+     * 
+     * @see: https://en.wikipedia.org/wiki/Softmax_function
+     * @param Matrix m - The matrix to apply Softmax to
+     * @return Matrix
+     */
+    function softmax(m) {
+        // get the data from the Matrix
+        var arr = m.toArray();
+        // setup a result array
         var res = [];
-        for (var i in foo) {
-            var values = foo[i];
+        
+        // read each row from the matrix and apply Softmax to each value
+        for (var i in arr) {
+            var values = arr[i];
             var exponents = values.map(Math.exp),
-            total = exponents.reduce((a, b) => a + b, 0);
-            res.push(exponents.map((exp) => exp / total));
+            total = exponents.reduce(function (a, b) {
+                return a + b;
+            });
+            
+            // add the Softmax output values to the result array
+            res.push(exponents.map(function (exp) { 
+                return exp / total;
+            }));
         }
         
-        //return new Matrix(exponents.map((exp) => exp / total));
+        // return a new Matrix based on res
         return new Matrix(res);
     }
     
@@ -223,6 +239,7 @@ function Wilson(opts) {
         hiddenNodes = opts.hiddenNodes || 3;    // number of hidden neurons
         iterations = opts.iterations || 10000;  // number of iterations
         learningRate = opts.learningRate || 0.1;
+        // TODO: Not sure this works as expected...
         activation = opts.activation || (typeof opts.activation === 'string' ? opts.activation == 'sigmoid' ? sigmoid : opts.activation == 'tanh' ? tanh : sigmoid : sigmoid);    // activation function
         activationPrime = opts.activationPrime || (typeof opts.activation === 'string' ? opts.activation == 'sigmoidPrime' ? sigmoidPrime : opts.activation == 'tanhPrime' ? tanhPrime : sigmoidPrime : sigmoidPrime); // derivitive of activation function
     }
@@ -244,11 +261,10 @@ function Wilson(opts) {
         
         // hidden > output
         // multiply the hidden weights by the hidden values and sum the resulting matrix (array)
-        
-        var sum = softmax(hidden.dot(hiddenWeights));
+        var output = softmax(hidden.dot(hiddenWeights));
         
         // > output
-        return sum;
+        return output;
     }
     
     /**
@@ -281,7 +297,7 @@ function Wilson(opts) {
         }));
         
         // return the error
-        return error
+        return error;
     }
     
     // expose methods and properties
