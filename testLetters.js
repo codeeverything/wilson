@@ -2,9 +2,26 @@
 // get wilson
 var wilson = require('./wilson.js')();
 
-wilson.configure({
-    iterations: 40000
-})
+/**
+ * Helper functions for running tests and outputting results
+ */
+function test(name, inputs, targets, report) {
+    console.log('');
+    console.log('************************************************************');
+    console.log('Running "' + name + '" test...');
+    console.log('    Learning...');
+    console.log('    Inputs: ' + JSON.stringify(inputs.slice(0, 5)) + '...');
+    console.log('    Targets: ' + JSON.stringify(targets.slice(0, 5)) + '...');
+    wilson.learn(inputs, targets, report);
+}
+
+function predict(input, expected) {
+    var p = wilson.predict(input);
+    console.log('Predicting...');
+    console.log('    Input: ' + JSON.stringify(input.slice(0, 5)) + '...');
+    console.log('    Expected: ' + expected);
+    console.log('    Output: ' + p.best.label + ' (' + ((p.best.score * 100).toFixed(2)) + '% confidence)');
+}
 
 /**
  * Letters.
@@ -46,7 +63,7 @@ var c = character(
  * Learn the letters A through C.
  */
 
-wilson.learn([
+test('OCR', [
     a,
     b,
     c
@@ -60,7 +77,7 @@ wilson.learn([
  * Predict the letter C, even with a pixel off.
  */
 
-var result = wilson.predict(character(
+predict(character(
   '.######' +
   '#......' +
   '#......' +
@@ -69,8 +86,6 @@ var result = wilson.predict(character(
   '##.....' +
   '######.'
 ), 'c');
-
-console.log(result); // ~ 0.5
 
 /**
  * Turn the # into 1s and . into 0s.
