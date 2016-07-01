@@ -2,30 +2,52 @@
 // get wilson
 var wilson = require('./wilson.js')();
 
-// learn XOR truth table
+/**
+ * Helper functions for running tests and outputting results
+ */
+function test(name, inputs, targets, report) {
+    console.log('');
+    console.log('************************************************************');
+    console.log('Running "' + name + '" test...');
+    console.log('    Learning...');
+    console.log('    Inputs: ' + JSON.stringify(inputs.slice(0, 5)) + '...');
+    console.log('    Targets: ' + JSON.stringify(targets.slice(0, 5)) + '...');
+    wilson.learn(inputs, targets, report);
+}
 
-wilson.learn([
+function predict(input, expected) {
+    var p = wilson.predict(input);
+    console.log('Predicting...');
+    console.log('    Input: ' + JSON.stringify(input.slice(0, 5)) + '...');
+    console.log('    Expected: ' + expected);
+    console.log('    Output: ' + p.best.label + ' (' + ((p.best.score * 100).toFixed(2)) + '% confidence)');
+}
+
+/**
+ * Tests
+ */
+
+// learn XOR truth table
+test('XOR', [
     [0,0],
     [0,1],
     [1,0],
     [1,1]
 ], [
-    'off',
-    'on',
-    'on',
-    'off'
+    0,
+    1,
+    1,
+    0
 ], true);
 
-// test
-wilson.predict([[0,0]], 0);
-wilson.predict([[0,1]], 1);
-wilson.predict([[1,0]], 1);
-wilson.predict([[1,1]], 0);
+predict([[0,0]], 0);
+predict([[0,1]], 1);
+predict([[1,0]], 1);
+predict([[1,1]], 0);
 
-// die();
 
 // learn RGB
-wilson.learn([
+test('RGB', [
     [1,1,1],
     [0,1,1],
     [0,0,1],
@@ -102,13 +124,13 @@ wilson.learn([
 ]);
 
 // test - known values
-wilson.predict([[1,1,1]], 'red');
-wilson.predict([[0,1,1]], 'green');
-wilson.predict([[0,0,1]], 'blue');
+predict([[1,1,1]], 'red');
+predict([[0,1,1]], 'green');
+predict([[0,0,1]], 'blue');
 
 // test - unknown values
-wilson.predict([[1.1,1.1,1.1]], 'red');
-wilson.predict([[0,0.5,0.5]], 'green');
+predict([[1.1,1.1,1.1]], 'red');
+predict([[0,0.5,0.5]], 'green');
 
 
 // train IRIS
@@ -118,7 +140,7 @@ wilson.configure({
     iterations: 20000
 });
 
-wilson.learn([
+test('IRIS', [
     [5.1,3.5,1.4,0.2],
     [4.9,3,1.4,0.2],
     [4.7,3.2,1.3,0.2],
@@ -423,16 +445,16 @@ wilson.learn([
 ], true);
 
 // trained 
-var p = wilson.predict([
+predict([
     [5.1,3.5,1.4,0.2]
 ], 'Iris-setosa');
 
 // unknown
-p = wilson.predict([
+predict([
     [6.2,3.4,5.4,2.3]
 ], 'Iris-virginica');
 
 // unknown
-p = wilson.predict([
+predict([
     [6.2,3.4,5.4,2.3]
 ], 'Iris-virginica');

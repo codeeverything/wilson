@@ -231,7 +231,10 @@ function Wilson(opts) {
         // find the index from this array with the max value. see: http://stackoverflow.com/questions/11301438/return-index-of-greatest-value-in-an-array
         var bestIdx = prediction.indexOf(Math.max.apply(Math, prediction));
         // return the corrosponding output/class label
-        return labels[bestIdx];
+        return {
+            label: labels[bestIdx],
+            score: prediction[bestIdx]
+        };
     }
     
     /**
@@ -378,7 +381,7 @@ function Wilson(opts) {
                         console.log('Error after ', i, 'iterations', err);
                     }
                     
-                    if (err < 0.05) {
+                    if (err < 0.01) {
                         console.log('Minimum error reached after', i, 'iterations');
                         break;
                     }
@@ -399,10 +402,13 @@ function Wilson(opts) {
             
             // predict the output from the input
             var prediction = forward(new Matrix(input));
-            console.log('predicted', (prediction).toArray(), getLabel(prediction), 'expected', expected);
+            // console.log('predicted', (prediction).toArray(), getLabel(prediction), 'expected', expected);
             return {
                 scores: prediction.toArray(),
-                bestLabel: getLabel(prediction)
+                best: {
+                    label: getLabel(prediction).label,
+                    score: getLabel(prediction).score
+                }
             };
         },
         /**
