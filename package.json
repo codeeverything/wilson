@@ -1,10 +1,10 @@
 {
-  "name": "chat-example",
+  "name": "Wilson",
   "version": "0.0.0",
-  "description": "A chat example to showcase how to use `socket.io` with a static `express` server with `async` for control flow.",
-  "main": "server.js",
+  "description": "A simple artificial neural network in NodeJS.",
+  "main": "wilson.js",
   "repository": "",
-  "author": "Mostafa Eweda <mo.eweda@gmail.com>",
+  "author": "Mike Timms <mike@codeeverything.com>",
   "dependencies": {
     "async": "~0.2.8",
     "express": "~3.2.4",
