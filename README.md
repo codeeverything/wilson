@@ -6,6 +6,12 @@ Wilson is an experiment in artificial neural networks. It's a work in progress, 
 
 Wilson is implemented in NodeJS, but there's no reason you couldn't fairly easily make it work in the browser, or port to another language (indeed, Wilson is largely based off of other work written in Python).
 
+#### Notes
+
+- Wilson is kind of focused on classification at the moment and even binary output will result in two output nodes with a confidence score each. I.e. Wilson doesn't handle regression problems (those where you want a single value as a result), at the moment. I'm looking to add that as an option.
+
+- Wilson also always uses [Softmax](https://en.wikipedia.org/wiki/Softmax_function) activation on the output layer to give a "probability" score for each node, where the total of all scores is 1.
+
 ### Tests/examples
 
 Run ```$ node test.js```, and ```$ node testLetter.js```
@@ -14,15 +20,63 @@ The former runs the following tests: XOR, RGB and IRIS
 
 The latter runs the example test from the [Mind neural network](https://github.com/stevenmiller888/mind) by Steven Miller, which was a huge inspiration in writing Wilson :)
 
-### Notes
+Test outputs have the following structure:
 
-- Wilson is kind of focused on classification at the moment and even binary output will result in two output nodes with a confidence score each. I.e. Wilson doesn't handle regression problems (those where you want a single value as a result), at the moment. I'm looking to add that as an option.
+```
+************************************************************
+Running "XOR" test...
+    Learning...
+    Inputs: [[0,0],[0,1],[1,0],[1,1]]...
+    Targets: [0,1,1,0]...
+Error after  0 iterations 0.5492247103934262
+Error after  1000 iterations 0.4994459891975506
+Error after  2000 iterations 0.48036100264513476
+Error after  3000 iterations 0.3318690742300831
+Error after  4000 iterations 0.210235976094908
+Error after  5000 iterations 0.10030507993581103
+Error after  6000 iterations 0.05475651370061447
+Error after  7000 iterations 0.035935203398354446
+Error after  8000 iterations 0.026303441483969545
+Error after  9000 iterations 0.020580266156410666
+Predicting...
+    Input: [[0,0]]...
+    Expected: 0
+    Output: 0 (93.44% confidence)
+Predicting...
+    Input: [[0,1]]...
+    Expected: 1
+    Output: 1 (90.96% confidence)
+Predicting...
+    Input: [[1,0]]...
+    Expected: 1
+    Output: 1 (88.77% confidence)
+Predicting...
+    Input: [[1,1]]...
+    Expected: 0
+    Output: 0 (90.75% confidence)
+```
 
-- Wilson also always uses [Softmax](https://en.wikipedia.org/wiki/Softmax_function) activation on the output layer to give a "probability" score for each node, where the total of all scores is 1.
+Hopefully this is fairly self explanatory, but in breif:
 
-### Learning the XOR truth table
+- Wilson "learns" from the training data (inputs and labels) supplied as to the test
+- We should the first 5 rows of input data and target output (labels)
+- Next we see a breakdown of the error (difference between the calculated output and target across all training examples), after each 1,000 iterations
+- Then we see the output of various predictions made after training is complete
+  - We see the input given, the output expected and the actual output (along with a confidence rating)
 
-We can learn the XOR truth table as follows:
+### Using Wilson
+
+The basic use case for Wilson, as it currently stands, is for classification of data. As with any artificial neural network (ANN), you first provide Wilson with some training data. This consists of some set of input "features" and expected output "labels".
+
+The input features describe properties of whatever you're trying to classify. For example, one of the tests (the last in test.js), uses a dataset which describes various properties of 3 species of Iris flowers (such as sepal length and width), along with a label for which species each row of input represents.
+
+You pass the input and expected output to Wilson in the learn() method. Wilson then iterates X times (default is 10,000), and adjusts itself (this is glossing over the detail), such that the output it produces approaches the expected output for all training examples.
+
+With the network trained you can then call predict() with some novel input (though still for the same sort of data, in this case Iris flowers), and Wilson will predict which "class" (flower), this data represents - with some degree of confidence.
+
+#### Example: Learning the XOR truth table
+
+A basic ANN example is usually to learn the XOR truth table, which we can do with Wilson as follows:
 
 ```
 // get wilson
