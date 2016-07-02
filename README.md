@@ -6,6 +6,13 @@ Wilson is an experiment in artificial neural networks. It's a work in progress, 
 
 Wilson is implemented in NodeJS, but there's no reason you couldn't fairly easily make it work in the browser, or port to another language (indeed, Wilson is largely based off of other work written in Python).
 
+##### New to Artificial Neural Networks?
+
+If you're new to ANNs then I can recommend the following two part blog series from Steven Miller and the video series by Stephen Welch as primers on the topic:
+
+- http://stevenmiller888.github.io/mind-how-to-build-a-neural-network/
+- https://www.youtube.com/watch?v=bxe2T-V8XRs
+
 #### Notes
 
 - Wilson is kind of focused on classification at the moment and even binary output will result in two output nodes with a confidence score each. I.e. Wilson doesn't handle regression problems (those where you want a single value as a result), at the moment. I'm looking to add that as an option.
