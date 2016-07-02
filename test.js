@@ -5,14 +5,28 @@ var wilson = require('./wilson.js')();
 /**
  * Helper functions for running tests and outputting results
  */
-function test(name, inputs, targets, report) {
+var regression = false;
+ 
+function classify(name, inputs, targets, report) {
+    regression = false;
     console.log('');
     console.log('************************************************************');
     console.log('Running "' + name + '" test...');
     console.log('    Learning...');
     console.log('    Inputs: ' + JSON.stringify(inputs.slice(0, 5)) + '...');
     console.log('    Targets: ' + JSON.stringify(targets.slice(0, 5)) + '...');
-    wilson.learn(inputs, targets, report);
+    wilson.classify(inputs, targets, report);
+}
+
+function regress(name, inputs, targets, report) {
+    regression = true;
+    console.log('');
+    console.log('************************************************************');
+    console.log('Running "' + name + '" test...');
+    console.log('    Learning...');
+    console.log('    Inputs: ' + JSON.stringify(inputs.slice(0, 5)) + '...');
+    console.log('    Targets: ' + JSON.stringify(targets.slice(0, 5)) + '...');
+    wilson.regress(inputs, targets, report);
 }
 
 function predict(input, expected) {
@@ -20,15 +34,23 @@ function predict(input, expected) {
     console.log('Predicting...');
     console.log('    Input: ' + JSON.stringify(input.slice(0, 5)) + '...');
     console.log('    Expected: ' + expected);
-    console.log('    Output: ' + p.best.label + ' (' + ((p.best.score * 100).toFixed(2)) + '% confidence)');
+    if (!regression) {
+        console.log('    Output: ' + p.best.label + ' (' + ((p.best.score * 100).toFixed(2)) + '% confidence)');
+    } else {
+        console.log('    Output: ' + p.best.score);
+    }
 }
 
 /**
  * Tests
  */
 
-// learn XOR truth table
-test('XOR', [
+// learn XOR truth table: regression
+wilson.configure({
+    learningRate: 0.5
+});
+
+regress('XOR', [
     [0,0],
     [0,1],
     [1,0],
@@ -44,6 +66,30 @@ predict([[0,0]], 0);
 predict([[0,1]], 1);
 predict([[1,0]], 1);
 predict([[1,1]], 0);
+
+// learn XOR truth table: classification
+wilson.configure({
+    learningRate: 0.1
+});
+
+classify('XOR', [
+    [0,0],
+    [0,1],
+    [1,0],
+    [1,1]
+], [
+    0,
+    1,
+    1,
+    0
+], true);
+
+predict([[0,0]], 0);
+predict([[0,1]], 1);
+predict([[1,0]], 1);
+predict([[1,1]], 0);
+
+die();
 
 
 // learn RGB

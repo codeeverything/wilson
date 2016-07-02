@@ -109,6 +109,8 @@ function Wilson(opts) {
     var activation;
     var activationPrime;
     
+    var regress = false;
+    
     // confgigure the network
     config();
     
@@ -266,7 +268,15 @@ function Wilson(opts) {
         
         // hidden > output
         // multiply the hidden weights by the hidden values and sum the resulting matrix (array)
-        var output = softmax(hidden.dot(hiddenWeights));
+        var output = hidden.dot(hiddenWeights);
+        
+        if (!regress) {
+            output = softmax(output);
+        } else {
+            output = output.map(function (val) {
+                return activation(val);
+            });
+        }
         
         // > output
         return output;
@@ -314,12 +324,82 @@ function Wilson(opts) {
          * @param array target - The target output value(s)
          * @return void
          */
-        learn: function (inputs, target, report) {
+        learn: function (inputs, target, outputLayer, report) {
             // first configure the network
             config();
             
             // learn the outputs from the inputs
             
+            /*// build the target/output layer based on the labels/classes given as targets
+            var outputLayer = Matrix.zero(target.length, inputs.length).toArray();
+            // get unique outputs
+            function onlyUnique(value, index, self) { 
+                return self.indexOf(value) === index;
+            }
+            
+            // get the unique outputs
+            var uniq = target.filter(onlyUnique);
+            
+            // map these to a binary representation
+            // for example: ['red', 'green', 'blue'] => [[1,0,0], [0,1,0], [0,0,1]] or
+            // ['red', 'green', 'red', blue'] => [[1,0,0], [0,1,0], [1,0,0], [0,0,1]]
+            var outputMap = {};
+            for (var idx in uniq) {
+                if (!outputMap[uniq[idx]]) {
+                    outputMap[uniq[idx]] = {
+                        data: Matrix.zero(1, uniq.length).toArray()
+                    }
+                }
+                
+                outputMap[uniq[idx]].data[0][idx] = 1;
+                labels[idx] = uniq[idx];
+            }
+            
+            // set the output layer to have the correct binary representation for each entry
+            for (var idx in target) {
+                outputLayer[idx] = outputMap[target[idx]].data[0];
+            }*/
+            
+            // set as matrix
+            inputs = new Matrix(inputs);
+            target = new Matrix(outputLayer);
+            
+            // initialize weights
+            inputWeights = inputWeights.populate(inputs.toArray()[0].length, hiddenNodes);
+            hiddenWeights = hiddenWeights.populate(hiddenNodes, target.toArray()[0].length);
+            
+            // learn yourself something
+            for (var i=0; i < iterations; i++) {
+                var guess = forward(inputs);
+                var error = backward(inputs, guess, target);
+                
+                // output error margin every 1000 iterations
+                if (i % 1000 == 0) {
+                    var err = (function(err) {
+                        // square the values
+                        error = error.map(function (val) {
+                            return val * val;
+                        });
+                        
+                        // get the sum of the values
+                        var sum = error.getSum();
+                        
+                        // return the mean (total / number of values)
+                        return sum / error.toArray().length;
+                    })(error);
+                    
+                    if (report) {
+                        console.log('Error after ', i, 'iterations', err);
+                    }
+                    
+                    if (err < 0.00005) {
+                        console.log('Minimum error reached after', i, 'iterations');
+                        break;
+                    }
+                }
+            }
+        },
+        classify: function (inputs, target, report) {
             // build the target/output layer based on the labels/classes given as targets
             var outputLayer = Matrix.zero(target.length, inputs.length).toArray();
             // get unique outputs
@@ -350,43 +430,18 @@ function Wilson(opts) {
                 outputLayer[idx] = outputMap[target[idx]].data[0];
             }
             
-            // set as matrix
-            inputs = new Matrix(inputs);
-            target = new Matrix(outputLayer);
+            regress = false;
+            this.learn(inputs, target, outputLayer, report);
+        },
+        regress: function (inputs, target, report) {
+            // build the target/output layer based on the labels/classes given as targets
+            var outputLayer = [];
+            for (var i in target) {
+                outputLayer[i] = [target[i]];
+            };
             
-            // initialize weights
-            inputWeights = inputWeights.populate(inputs.toArray()[0].length, hiddenNodes);
-            hiddenWeights = hiddenWeights.populate(hiddenNodes, target.toArray()[0].length);
-            
-            // learn yourself something
-            for (var i=0; i < iterations; i++) {
-                var error = backward(inputs, forward(inputs), target);
-                
-                // output error margin every 1000 iterations
-                if (i % 1000 == 0) {
-                    var err = (function(err) {
-                        // square the values
-                        error = error.map(function (val) {
-                            return val * val;
-                        });
-                        
-                        // get the sum of the values
-                        var sum = error.getSum();
-                        
-                        // return the mean (total / number of values)
-                        return sum / error.toArray().length;
-                    })(error);
-                    
-                    if (report) {
-                        console.log('Error after ', i, 'iterations', err);
-                    }
-                    
-                    if (err < 0.01) {
-                        console.log('Minimum error reached after', i, 'iterations');
-                        break;
-                    }
-                }
-            }
+            regress = true;
+            this.learn(inputs, target, outputLayer, report);
         },
         /**
          * Given an input value(s) predict the ouput(s)
@@ -402,6 +457,7 @@ function Wilson(opts) {
             
             // predict the output from the input
             var prediction = forward(new Matrix(input));
+            
             // console.log('predicted', (prediction).toArray(), getLabel(prediction), 'expected', expected);
             return {
                 scores: prediction.toArray(),
