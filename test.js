@@ -45,12 +45,32 @@ function predict(input, expected) {
  * Tests
  */
 
+// learn hours study + hours sleep relation to test scores: regression
+// https://www.youtube.com/watch?v=bxe2T-V8XRs
+wilson.configure({
+    learningRate: 0.5
+});
+
+regress('STUDY: Regression', [
+    [3,5],
+    [5,1],
+    [10,2],
+], [
+    0.75,
+    0.82,
+    0.93,
+], true);
+
+predict([[3,5]], 0.75);
+predict([[5,1]], 0.82);
+predict([[10,2]], 0.93);
+
 // learn XOR truth table: regression
 wilson.configure({
     learningRate: 0.5
 });
 
-regress('XOR', [
+regress('XOR: Regression', [
     [0,0],
     [0,1],
     [1,0],
@@ -72,7 +92,7 @@ wilson.configure({
     learningRate: 0.1
 });
 
-classify('XOR', [
+classify('XOR: Classification', [
     [0,0],
     [0,1],
     [1,0],
@@ -89,11 +109,9 @@ predict([[0,1]], 1);
 predict([[1,0]], 1);
 predict([[1,1]], 0);
 
-die();
-
 
 // learn RGB
-test('RGB', [
+classify('RGB: Classification', [
     [1,1,1],
     [0,1,1],
     [0,0,1],
@@ -186,7 +204,7 @@ wilson.configure({
     iterations: 20000
 });
 
-test('IRIS', [
+classify('IRIS: Classification', [
     [5.1,3.5,1.4,0.2],
     [4.9,3,1.4,0.2],
     [4.7,3.2,1.3,0.2],

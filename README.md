@@ -13,11 +13,29 @@ If you're new to ANNs then I can recommend the following two part blog series fr
 - http://stevenmiller888.github.io/mind-how-to-build-a-neural-network/
 - https://www.youtube.com/watch?v=bxe2T-V8XRs
 
-#### Notes
+### Regression and Classification
 
-- Wilson is kind of focused on classification at the moment and even binary output will result in two output nodes with a confidence score each. I.e. Wilson doesn't handle regression problems (those where you want a single value as a result), at the moment. I'm looking to add that as an option.
+Wilson can work with both regression and classification problems. 
 
-- Wilson also always uses [Softmax](https://en.wikipedia.org/wiki/Softmax_function) activation on the output layer to give a "probability" score for each node, where the total of all scores is 1.
+#### Regression
+
+Regression problems have a single output which is a continuous value, which will have been scaled by the activation function.
+
+#### Classification
+
+Classification problems typically have 3 or more outputs, the value of which is the confidence of that output being correct.
+
+> ##### Two outputs
+>
+> You may have noticed I missed the case of 2 outputs above.
+>
+> Binary output can be solved with either regression or classification. In the former values 0 - 0.5 would be considered "off" and values > 0.5 "on" (assuming a sigmoid activation function). In the latter you'd have a confidence measure for each output between 0 and 1.
+
+#### Examples
+
+An example (taken from Stephen Welch's video series), is predicting test score from hours studied and hours slept.
+
+You can also approach the XOR problem as either a regression or classification problem. As a regression problem you'd expect a value output that is close to the expected 0 or 1 value, and as a classification problem you'd expect a high confidence on either the 0 or 1 output.
 
 ### Tests/examples
 

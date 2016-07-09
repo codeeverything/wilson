@@ -12,7 +12,7 @@ function test(name, inputs, targets, report) {
     console.log('    Learning...');
     console.log('    Inputs: ' + JSON.stringify(inputs.slice(0, 5)) + '...');
     console.log('    Targets: ' + JSON.stringify(targets.slice(0, 5)) + '...');
-    wilson.learn(inputs, targets, report);
+    wilson.classify(inputs, targets, report);
 }
 
 function predict(input, expected) {
@@ -63,7 +63,7 @@ var c = character(
  * Learn the letters A through C.
  */
 
-test('OCR', [
+test('OCR: Classification', [
     a,
     b,
     c
